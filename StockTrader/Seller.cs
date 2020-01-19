@@ -32,6 +32,7 @@ namespace StockTrader
         }
         public static async Task SellOnOnePercentGain()
         {
+            //get portfolio from positions
             var restClient = new RestClient(Switches.AlpacaAPIKey(), Switches.AlpacaSecretAPIKey(), Switches.AlpacaEndPoint());
 
             if (File.Exists(Switches.stockDirectory + "Portfolio.csv"))

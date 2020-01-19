@@ -77,4 +77,13 @@ namespace StockTrader
         }
 
     }
+
+
+    public partial class Portfolio
+    {
+        public string symbol { get; set; }
+        public DateTime datePurchased { get; set; }
+        public int numberOfShares { get; set; }
+        public double averagePrice { get; set; }
+    }
 }

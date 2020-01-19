@@ -18,7 +18,7 @@ namespace StockTrader
     {
         public static string StockDirectory = Switches.stockDirectory;
         public static List<Symbol> Symbols = new List<Symbol>();
-        public static void Run()
+        public void Run()
         {
             //place all symbols from All Stocks into string list.
             Symbols = SetActiveSymbols();
