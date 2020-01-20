@@ -10,24 +10,32 @@ namespace StockTrader
     {
         static void Main(string[] args)
         {
-            //download stocks
-            Downloader Downloader = new Downloader();
-            Downloader.Run();
+            try
+            {
+                //download stocks
+                Downloader Downloader = new Downloader();
+                Downloader.Run();
 
-            //Update Portfolio
-            Portfolio.UpdatePortfolio();
+                //Update Portfolio
+                Portfolio.UpdatePortfolio();
 
-            //sell stocks
-            Seller.Run();
+                //sell stocks
+                Seller.Run();
 
-            //Update Portfolio
-            Portfolio.UpdatePortfolio();
+                //Update Portfolio
+                Portfolio.UpdatePortfolio();
 
-            //buy stocks
-            Buyer.Run();
+                //buy stocks
+                Buyer.Run();
 
-            //Update Portfolio
-            Portfolio.UpdatePortfolio();
+                //Update Portfolio
+                Portfolio.UpdatePortfolio();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadKey();
+            }
         }
     }
 }
