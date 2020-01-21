@@ -48,11 +48,11 @@ namespace StockTrader
                             break;
                         }
 
-                        symbols.Add(parts[0]);
+                        symbols.Add(parts[0]);                        
                     }//end while (true)
 
                     //for each symbol in list
-                    for (int i = 0; i < symbols.Count(); i++)
+                    for (int i = 1; i < symbols.Count(); i++)
                     {
                         //if directory doesn't exist, add to symbols with IsActive = false
                         if (!Directory.Exists(StockDirectory + symbols[i]))
@@ -75,7 +75,39 @@ namespace StockTrader
             {
                 throw Utility.ThrowException(ex);
             }
-        }//end GetActiveSymbols(0
+        }//end SetActiveSymbols(0
+
+
+        public static List<Symbol> GetActiveSymbols()
+        {
+            try
+            {
+                List<Symbol> to_return = new List<Symbol>();
+                using (TextFieldParser parser = new TextFieldParser(@"C:\Users\Ryan\Desktop\StocksFolder\AllStocks.csv"))
+                {
+                    List<string> symbols = new List<string>();
+
+                    parser.Delimiters = new string[] { "," };
+                    while (true)
+                    {
+                        string[] parts = parser.ReadFields();
+                        if (parts == null)
+                        {
+                            break;
+                        }
+
+                        to_return.Add(new Symbol { Name = parts[0], IsActive = (parts[1] == "True") });
+                    }//end while (true)
+
+                }//end using (TextFieldParser parser = new TextFieldParser(@"C:\Users\Ryan\Desktop\StocksFolder\AllStocks.csv"))
+
+                return to_return;
+            }
+            catch (Exception ex)
+            {
+                throw Utility.ThrowException(ex);
+            }
+        }
 
         public static void DownloadStocks()
         {
