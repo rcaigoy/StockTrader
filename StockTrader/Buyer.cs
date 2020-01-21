@@ -30,12 +30,14 @@ namespace StockTrader
             Symbols = _Symbols;
         }
 
-        public static void Run()
+        public void Run()
         {
             //Calculate Day Lists from All Stocks csv where Is Active
             foreach (var p in Symbols.Where(x => x.IsActive))
             {
-
+                CheckToAddSymbolDynamic(p.Name, DateTime.Today.AddDays(-1), 1, DayLList);
+                CheckToAddSymbolDynamic(p.Name, DateTime.Today.AddDays(-1), 5, WeekLList);
+                CheckToAddSymbolDynamic(p.Name, DateTime.Today.AddDays(-1), 20, MonthLList);
             }//end foreach (var p in Symbols.Where(x => x.IsActive))
 
             //Calculate Week List from csv from All Stocks csv where Is Active

@@ -26,7 +26,8 @@ namespace StockTrader
                 Portfolio.UpdatePortfolio();
 
                 //buy stocks
-                Buyer.Run();
+                Buyer buyer = new Buyer(Downloader.Symbols);
+                buyer.Run();
 
                 //Update Portfolio
                 Portfolio.UpdatePortfolio();
