@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.IO;
+using Microsoft.VisualBasic.FileIO;
+using System.Net;
+using System.Net.Http;
 
 using Alpaca.Markets;
 
@@ -25,6 +28,10 @@ namespace StockTrader
 
         public static List<IntervalCheck> MonthLList = new List<IntervalCheck>();
 
+        public static List<IntervalCheck> SymbolsToCheck2 = new List<IntervalCheck>();
+
+        public static List<IntervalCheck> SymbolsToCheck3 = new List<IntervalCheck>();
+
         public Buyer(List<Symbol> _Symbols)
         {
             Symbols = _Symbols;
@@ -32,7 +39,7 @@ namespace StockTrader
 
         public void Run()
         {
-            //Calculate Day Lists from All Stocks csv where Is Active
+            //Calculate Lists from All Stocks csv where Is Active
             foreach (var p in Symbols.Where(x => x.IsActive))
             {
                 CheckToAddSymbolDynamic(p.Name, DateTime.Today.AddDays(-1), 1, DayLList);
@@ -40,17 +47,16 @@ namespace StockTrader
                 CheckToAddSymbolDynamic(p.Name, DateTime.Today.AddDays(-1), 20, MonthLList);
             }//end foreach (var p in Symbols.Where(x => x.IsActive))
 
-            //Calculate Week List from csv from All Stocks csv where Is Active
+            //order lists
+            DayLList = DayLList.OrderBy(x => x.GetTradePercent()).ToList();
+            WeekLList = WeekLList.OrderBy(x => x.GetTradePercent()).ToList();
+            MonthLList = MonthLList.OrderBy(x => x.GetTradePercent()).ToList();
 
-            //Calculate Month List from csv from All Stocks csv where Is Active
+            //Create Purchase Lists
+            CreatePurchaseLists();
 
-            //Buy top 3 10% from day list
-
-            //Buy top 3 10% from week list that aren't in day list
-
-            //Buy top 3 10% from Month list not in day or week list
-
-            //Use all extra funds for next month list
+            //Buy
+            Task.Run(async () => await Buy(DayLList, SymbolsToCheck2, SymbolsToCheck3));
         }
 
 
@@ -244,6 +250,249 @@ namespace StockTrader
         }//end public static DateTime GetPreviousTradeDay(string symbol, DateTime d)
 
 
+        public void CreatePurchaseLists()
+        {
+            try
+            {
+                //create SymbolsToCheck2
+                foreach (var p in DayLList)
+                {
+                    foreach (var p2 in WeekLList)
+                    {
+                        foreach (var p3 in MonthLList)
+                        {
+                            if (p.symbol == p2.symbol && p.symbol == p3.symbol)
+                            {
+                                SymbolsToCheck3.Add(p);
+                            }
+                        }
+                    }
+                }//end foreach (var p in DayLList)
+
+                foreach(var p in DayLList)
+                {
+                    foreach(var p2 in WeekLList)
+                    {
+                        if (p.symbol == p2.symbol)
+                        {
+                            SymbolsToCheck2.Add(p);
+                        }
+                    }
+                }//end foreach(var p in DayLList)
+            }
+            catch (Exception ex) 
+            {
+                throw Utility.ThrowException(ex);
+            }
+        }
+
+
+        public static async Task Buy(List<IntervalCheck> singles, List<IntervalCheck> doubles, List<IntervalCheck> triples)
+        {
+            var restClient = new RestClient(Switches.AlpacaAPIKey(), Switches.AlpacaSecretAPIKey(), Switches.AlpacaEndPoint());
+
+            var account = await restClient.GetAccountAsync();
+            List<string> purchaseList = new List<string>();
+
+            double BuyingPower = (double)account.BuyingPower;
+            int lastCounter = 0;
+            int triplesBought = 0;
+            for (int i = 0; triplesBought < 3 && i < triples.Count(); lastCounter = i, i++)
+            {
+
+                for (; InPortfolio(triples[i].symbol) || contains(triples[i].symbol, purchaseList); i++) ;
+
+                double price;
+                try
+                {
+                    price = GetPrice(triples[i].symbol);
+                }
+                catch (Exception ex)
+                {
+                    price = triples[i].intervals[0].close;
+                }
+                int j = 0;
+                for (; price * j < BuyingPower / 10; j++) ;
+                if (j > 1)
+                {
+                    try
+                    {
+                        j--;
+                        var order = await restClient.PostOrderAsync(triples[i].symbol, j, OrderSide.Buy, OrderType.Market, TimeInForce.Day);
+                        triplesBought++;
+                        purchaseList.Add(triples[i].symbol);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
+                }
+            }
+            int doublesBought = 0;
+            for (int i = 0; doublesBought < 3 && i < doubles.Count(); i++)
+            {
+                for (; InPortfolio(doubles[i].symbol) || contains(doubles[i].symbol, purchaseList); i++) ;
+
+                double price;
+                try
+                {
+                    price = GetPrice(doubles[i].symbol);
+                }
+                catch (Exception ex)
+                {
+                    price = doubles[i].intervals[0].close;
+                }
+                int j = 0;
+                for (; price * j < BuyingPower / 10; j++) ;
+                if (j > 1)
+                {
+                    try
+                    {
+                        j--;
+                        var order = await restClient.PostOrderAsync(doubles[i].symbol, j, OrderSide.Buy, OrderType.Market, TimeInForce.Day);
+                        doublesBought++;
+                        purchaseList.Add(doubles[i].symbol);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
+
+                }
+            }
+
+            int singlesBought = 0;
+            for (int i = 0; singlesBought < 3 && i < doubles.Count(); i++)
+            {
+                for (; InPortfolio(singles[i].symbol) || contains(singles[i].symbol, purchaseList); i++) ;
+
+                double price;
+                try
+                {
+                    price = GetPrice(singles[i].symbol);
+                }
+                catch (Exception ex)
+                {
+                    price = singles[i].intervals[0].close;
+                }
+
+                int j = 0;
+                for (; price * j < BuyingPower / 10; j++) ;
+                if (j > 1)
+                {
+                    try
+                    {
+                        j--;
+                        var order = await restClient.PostOrderAsync(singles[i].symbol, j, OrderSide.Buy, OrderType.Market, TimeInForce.Day);
+                        singlesBought++;
+                        purchaseList.Add(singles[i].symbol);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
+                }
+            }
+
+            try
+            {
+                BuyLeftover(triples, purchaseList, lastCounter).Wait();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("cannot buy because " + ex.ToString());
+            }
+
+        }//end public static async void Buy(List<IntervalCheck> singles, List<IntervalCheck> doubles, List<IntervalCheck> triples)
+
+
+        public static bool InPortfolio(string symbol)
+        {
+            if (File.Exists(Switches.stockDirectory + "Portfolio.csv"))
+            {
+                var allLines2 = File.ReadAllLines(Switches.stockDirectory + "Portfolio.csv");
+                foreach (var line in allLines2)
+                    if (line.ToLower().Contains(symbol.ToLower()))
+                        return true;
+            }
+
+            return false;
+        }
+
+
+        public static bool contains(string symbol, List<string> purchaseList)
+        {
+            foreach (var p in purchaseList)
+            {
+                if (p.ToLower() == symbol.ToLower())
+                    return true;
+            }
+            return false;
+        }
+
+
+        public static double GetPrice(string symbol)
+        {
+            double d = 0;
+            var IEXTrading_API_PATH = "https://cloud.iexapis.com/stable/stock/" + symbol + "/price?token=" + Switches.AlpacaAPIKey();// pk_d77c6f838027448cae27d946fa677249";
+
+            WebRequest request = WebRequest.Create(IEXTrading_API_PATH);
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream dataStream = response.GetResponseStream();
+            StreamReader reader = new StreamReader(dataStream);
+            string responseFromServer = reader.ReadToEnd();
+            d = Convert.ToDouble(responseFromServer);
+
+            return d;
+        }
+
+
+        public static async Task BuyLeftover(List<IntervalCheck> triples, List<string> purchaseList, int lastCounter)
+        {
+            var restClient = new RestClient(Switches.AlpacaAPIKey(), Switches.AlpacaSecretAPIKey(), Switches.AlpacaEndPoint());
+            var account = await restClient.GetAccountAsync();
+            double BuyingPower = (double)account.BuyingPower;
+            bool lastBought = false;
+            double expectation = 0.9;
+            while (!lastBought && BuyingPower > 100 && expectation > 0)
+            {
+
+                for (int i = lastCounter; i < triples.Count() && !lastBought; i++)
+                {
+                    //for (; InPortfolio(triples[i].symbol); i++) ;
+                    for (; InPortfolio(triples[i].symbol) || contains(triples[i].symbol, purchaseList); i++) ;
+                    double price;
+                    try
+                    {
+                        price = GetPrice(triples[i].symbol);
+                    }
+                    catch (Exception ex)
+                    {
+                        price = triples[i].intervals[0].close;
+                    }
+                    int j = 0;
+                    for (; price * j < BuyingPower; j++) ;
+                    if (j > 1)
+                    {
+                        j--;
+                        j--;
+                        if (price * j > BuyingPower * expectation)
+                        {
+                            try
+                            {
+                                var order = await restClient.PostOrderAsync(triples[i].symbol, j, OrderSide.Buy, OrderType.Market, TimeInForce.Day);
+                                lastBought = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.ToString());
+                            }
+                        }
+                    }
+                }
+                expectation = expectation - 0.05;
+            } //while (!lastBought && BuyingPower > 100 && expectation > 0)
+        }
 
     }//end public class Buyer
 }
