@@ -13,20 +13,20 @@ namespace StockTrader
             try
             {
                 //download stocks
-                //Downloader Downloader = new Downloader();
-                //Downloader.Run();
+                Downloader Downloader = new Downloader();
+                Downloader.Run();
 
-                ////Update Portfolio
-                //Portfolio.UpdatePortfolio();
+                //Update Portfolio 66
+                Portfolio.UpdatePortfolio();
 
-                ////sell stocks
-                //Seller.Run();
+                //sell stocks
+                Seller.Run();
 
-                ////Update Portfolio
-                //Portfolio.UpdatePortfolio();
+                //Update Portfolio
+                Portfolio.UpdatePortfolio();
 
                 //buy stocks
-                Buyer buyer = new Buyer(Downloader.Symbols);
+                Buyer buyer = new Buyer(Downloader.GetActiveSymbols());
                 buyer.Run();
 
                 //Update Portfolio
