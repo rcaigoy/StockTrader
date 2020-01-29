@@ -57,13 +57,15 @@ namespace StockTrader
                         //if directory doesn't exist, add to symbols with IsActive = false
                         if (!Directory.Exists(StockDirectory + symbols[i]))
                         {
+                            //default active to false since directory doesn't exist
                             to_return.Add(new Symbol { Name = symbols[i], IsActive = false });
                             Console.WriteLine(StockDirectory + symbols[i] + " Doesn't Exist");
                         }
                         else
                         {
-                            to_return.Add(new Symbol { Name = symbols[i], IsActive = true });
-                            AppendLatestValues(symbols[i]);
+                            //add each symbol to list
+                            to_return.Add(new Symbol { Name = symbols[i], IsActive = AppendLatestValues(symbols[i]) });
+                            //AppendLatestValues(symbols[i]);
                         }
                     }//end for (int i = 0; i < symbols.Count(); i++)
 
@@ -129,31 +131,39 @@ namespace StockTrader
         {
             try
             {
-                //get year
+                //get latest value's year
                 int year = DateTime.Today.Year;
                 for (; !Directory.Exists(StockDirectory + symbol + @"\" + year) && year > 2013; year--) ;
                 if (year == 2013)
                     return false;
 
-                //get month
-                int month = DateTime.Today.Year;
+                //get latest value's month
+                int month = 12;
+
+                //if latest value is in this year, then default to this year's month
+                if (year == DateTime.Today.Year)
+                    month = DateTime.Today.Month;
+
+                //get latest month
                 for (; !File.Exists(StockDirectory + symbol + @"\" + year + @"\" + month + @"\" + symbol + ".csv") && month > 0; month--) ;
                 if (month == 0)
                     return false;
 
                 //place all values of current csv file lines into string array
                 var allLines = File.ReadAllLines(StockDirectory + symbol + @"\" + year + @"\" + month + @"\" + symbol + ".csv");
-
-                //for(int i = 0; i < allLines.Count(); i++)
-
                 string[] temp = allLines[allLines.Count() - 1].Split(',');
 
                 //latest day is on last line
                 DateTime latestDay = Convert.ToDateTime(temp[0]);
+
+                //start at first day after latest day
                 latestDay = latestDay.AddDays(1);
 
                 //example
                 //https://cloud.iexapis.com/stable/stock/mmm/chart/date/20190618?chartByDay=true&token=pk_d77c6f838027448cae27d946fa677249
+
+                //API has 10 tries to 
+                int AttemptCounter = 0;
 
                 while (latestDay < DateTime.Today)
                 {
@@ -249,15 +259,21 @@ namespace StockTrader
 
                                 }//end for (int i = 0; i < historicalDataList.Count(); i++)
 
+                                //reset attempt counter if successful data read
+                                AttemptCounter = 0;
+
                             }//end if (historicaldata.Count() > 0)
                             else
                             {
-                                //if response returned is empty and csv is not updated, return false
-                                if (latestDay < DateTime.Today.AddDays(-2))
+                                //if historical data count = 0
+                                //increment attempt counter
+                                AttemptCounter++;
+                                if (AttemptCounter > 10)
                                 {
                                     return false;
                                 }
                             }
+
                         }//end if (response.IsSuccessStatusCode)
                         else
                         {
