@@ -16,7 +16,7 @@ namespace StockTrader
                 Downloader Downloader = new Downloader();
                 Downloader.Run();
 
-                //Update Portfolio 66
+                //Update Portfolio 66 (lame starwars joke)
                 Portfolio.UpdatePortfolio();
 
                 //sell stocks
@@ -35,7 +35,7 @@ namespace StockTrader
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                Console.ReadKey();
+                //Console.ReadKey();
             }
         }
     }
