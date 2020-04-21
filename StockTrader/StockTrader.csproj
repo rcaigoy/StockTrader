@@ -33,8 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Alpaca.Markets, Version=3.5.2.0, Culture=neutral, PublicKeyToken=16fb7a27ac3b9689, processorArchitecture=MSIL">
-      <HintPath>..\packages\Alpaca.Markets.3.5.2\lib\net45\Alpaca.Markets.dll</HintPath>
+    <Reference Include="Alpaca.Markets, Version=3.6.1.0, Culture=neutral, PublicKeyToken=16fb7a27ac3b9689, processorArchitecture=MSIL">
+      <HintPath>..\packages\Alpaca.Markets.3.6.1\lib\net45\Alpaca.Markets.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="NATS.Client, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">

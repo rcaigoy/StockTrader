@@ -151,8 +151,8 @@ namespace StockTrader
             {
                 AlpacaTradingClientConfiguration config = new AlpacaTradingClientConfiguration();
                 config.ApiEndpoint = new Uri(Switches.AlpacaEndPoint());
-                config.KeyId = Switches.AlpacaAPIKey();
-                config.SecurityId = new SecretKey(Switches.AlpacaSecretAPIKey());
+                //config.KeyId = Switches.AlpacaAPIKey();
+                config.SecurityId = new SecretKey(Switches.AlpacaAPIKey(), Switches.AlpacaSecretAPIKey());
                 var restClient = new AlpacaTradingClient(config);
 
                 //var positions1 = await restClient.ListAssetsAsync(AssetStatus.Active);

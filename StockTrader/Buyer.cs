@@ -291,7 +291,11 @@ namespace StockTrader
         {
             try
             {
-                var restClient = new RestClient(Switches.AlpacaAPIKey(), Switches.AlpacaSecretAPIKey(), Switches.AlpacaEndPoint());
+                 AlpacaTradingClientConfiguration config = new AlpacaTradingClientConfiguration();
+                config.ApiEndpoint = new Uri(Switches.AlpacaEndPoint());
+                //config.KeyId = Switches.AlpacaAPIKey();
+                config.SecurityId = new SecretKey(Switches.AlpacaAPIKey(), Switches.AlpacaSecretAPIKey());
+                var restClient = new AlpacaTradingClient(config);
 
                 var account = await restClient.GetAccountAsync();
 

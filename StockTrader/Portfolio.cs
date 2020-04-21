@@ -11,9 +11,9 @@ namespace StockTrader
 {
     public partial class Portfolio
     {
-        public void Update()
+        public HistoricalDataResponse GetSymbolDataByDay(DateTime dt)
         {
-
+            return new HistoricalDataResponse();
         }
 
 
